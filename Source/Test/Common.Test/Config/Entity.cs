@@ -6,20 +6,7 @@ namespace Zhoubin.Infrastructure.Common.Test.Config
 {
     public sealed class Entity : ConfigEntityBase
     {
-        public string Propety { get; private set; }
-        public string Propety1 { get; private set; }
-
-        protected override void SetProperty(IConfigurationSection node)
-        {
-            switch (node.Key)
-            {
-                case "Propety":
-                    Propety = node.Value;
-                    break;
-                case "Propety1":
-                    Propety1 = node.Value;
-                    break;
-            }
-        }
+        public string Propety { get { return GetValue<string>("Propety"); } set { SetValue("Propety", value); } }
+        public string Propety1 { get { return GetValue<string>("Propety1"); } set { SetValue("Propety1", value); } }
     }
 }

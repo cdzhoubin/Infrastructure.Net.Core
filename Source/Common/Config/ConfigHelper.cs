@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +12,7 @@ namespace Zhoubin.Infrastructure.Common.Config
     /// 配置读取类基类
     /// </summary>
     /// <typeparam name="T">配置对象类型</typeparam>
-    public class ConfigHelper<T>: ConfigHelper where T : ConfigEntityBase,new()
+    public class ConfigHelper<T> : ConfigHelper where T : ConfigEntityBase, new()
     {
         /// <summary>
         /// 设置是否自动生成 配置加密key
@@ -37,29 +39,59 @@ namespace Zhoubin.Infrastructure.Common.Config
         /// </summary>
         protected List<T> Section { get { return _section.Enities; } }
 
-        
+
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="sectionName">配置区名称</param>
-        /// <param name="configFile">配置文件路径，当传入null或空时，如果在当前目录或bin目录下存在Common.Config文件，就使用此文件，如果不存在表示从默认配置文件读取</param>
-        public ConfigHelper(string sectionName)
+        /// <param name="listConfig">配置为多节点</param>
+        public ConfigHelper(string sectionName, bool listConfig = true)
         {
 
             var section = configuration.GetSection(sectionName);
             ConfigSectionEntity<T> configSectionEntity = new ConfigSectionEntity<T>();
-            List<T> list = new List<T>();
-            foreach(var item in section.GetChildren())
+
+            if (listConfig)
             {
-                T entity = new T();
-                entity.Parse(item);
-                list.Add(entity);
-                
+                var list = new ServiceCollection()
+                    .AddOptions()
+                    .Configure<List<T>>(section)
+                    .BuildServiceProvider()
+                    .GetService<IOptions<List<T>>>()
+                    .Value;
+                list.ForEach(p =>
+                {
+                    if (p.EnableCryptography)
+                    {
+                        p.Decrypt();
+                    }
+                    p.LockDataSet();
+                });
+
+                configSectionEntity.Enities = list;
+                configSectionEntity.DefaultConfig = list.FirstOrDefault(p => p.Default);
             }
-            configSectionEntity.Enities = list;
-            configSectionEntity.DefaultConfig = list.FirstOrDefault(p => p.Default);
-            if(configSectionEntity.DefaultConfig != null)
+            else
+            {
+                var list = new ServiceCollection()
+                .AddOptions()
+                .Configure<T>(section)
+                .BuildServiceProvider()
+                .GetService<IOptions<T>>()
+                .Value;
+
+                if (list.EnableCryptography)
+                {
+                    list.Decrypt();
+                }
+                list.LockDataSet();
+
+                configSectionEntity.Enities = new List<T> { list };
+                configSectionEntity.DefaultConfig = list;
+            }
+
+            if (configSectionEntity.DefaultConfig != null)
             {
                 configSectionEntity.DefaultConfigName = configSectionEntity.DefaultConfig.Name;
             }
@@ -68,7 +100,7 @@ namespace Zhoubin.Infrastructure.Common.Config
 
         }
 
-        
+
 
         /// <summary>
         /// 根据索引键值取指定的配置
@@ -87,7 +119,7 @@ namespace Zhoubin.Infrastructure.Common.Config
         {
             get
             {
-                if (index <0 || index >Section.Count-1)
+                if (index < 0 || index > Section.Count - 1)
                 {
                     return null;
                 }
@@ -107,14 +139,15 @@ namespace Zhoubin.Infrastructure.Common.Config
 
     public class ConfigHelper
     {
-        public static string GetAppSettings(string key) {
+        public static string GetAppSettings(string key)
+        {
             var appseetings = configuration.GetSection("appSetting");
-            if(appseetings == null)
+            if (appseetings == null)
             {
                 return null;
             }
             var section = appseetings.GetSection(key);
-            if (section  == null)
+            if (section == null)
             {
                 return null;
             }

@@ -36,39 +36,26 @@ namespace Zhoubin.Infrastructure.Common.Cryptography
         /// <summary>
         /// 日志处理器
         /// </summary>
-        public string AlgorithmProvider { get; private set; }
+        public string AlgorithmProvider { get { return GetValue<string>("AlgorithmProvider"); } set { SetValue("AlgorithmProvider", value); } }
 
 
         /// <summary>
         /// 扩展属性
         /// </summary>
-        public Dictionary<string, string> ExtentProperty { get; private set; }
+        public Dictionary<string, string> ExtentProperty
+        {
+            get { return GetValue<Dictionary<string, string>>("ExtentProperty"); }
+            set {
+                SetValue("ExtentProperty", value);
+            }
+        }
 
         /// <summary>
         /// 同步算法
         /// </summary>
-        public bool SymmetricAlgorithm { get; private set; }
+        public bool SymmetricAlgorithm { get { return GetValue<bool>("SymmetricAlgorithm"); } set { SetValue("SymmetricAlgorithm", value); } }
 
-        /// <summary>
-        /// 设置属性值
-        /// </summary>
-        /// <param name="entity">实体</param>
-        /// <param name="node">结点</param>
-        protected override void SetProperty(IConfigurationSection node)
-        {
-            switch (node.Key)
-            {
-                case "AlgorithmProvider":
-                    AlgorithmProvider = node.Value;
-                    break;
-                case "SymmetricAlgorithm":
-                    SymmetricAlgorithm = node.Value.ToLower() == "true";
-                    break;
-                default:
-                    ExtentProperty.Add(node.Key, node.Value);
-                    break;
-            }
-        }
+
 
         /// <summary>
         /// 解密，算法实现和扩展属性
@@ -76,9 +63,9 @@ namespace Zhoubin.Infrastructure.Common.Cryptography
         /// </summary>
         /// <param name="entity">待解密对象</param>
         /// <returns>返回解密后对象</returns>
-        protected override void Decrypt()
+        internal protected override void Decrypt()
         {
-           base.Decrypt();
+            base.Decrypt();
 
             AlgorithmProvider = Decrypt(AlgorithmProvider);
             foreach (var keyValuePair in ExtentProperty)

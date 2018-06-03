@@ -22,7 +22,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         {
             get
             {
-                return base[name].Provider;
+                return base[name].ProviderInstance;
             }
         }
     }    

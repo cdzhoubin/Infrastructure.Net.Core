@@ -77,7 +77,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
                 
                 //Load registered providers and point _objProvider to the default provider
                 _objProviders = new CacheProviderCollection();
-                _objProvider = _objProviders.DefaultConfig.Provider;
+                _objProvider = _objProviders.DefaultConfig.ProviderInstance;
 
                 if (_objProvider == null)
                 {

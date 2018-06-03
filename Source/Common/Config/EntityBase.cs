@@ -17,12 +17,9 @@ namespace Zhoubin.Infrastructure.Common.Config
     /// </summary>
     public class ConfigEntityBase
     {
+        #region 配置自动解密相关
         private static EncryptionConfigEntity _configEntity;
         private static readonly Hashtable HtSyc = new Hashtable();
-        static ConfigEntityBase()
-        {
-
-        }
 
         private static string[] GenKeyContent()
         {
@@ -57,68 +54,16 @@ namespace Zhoubin.Infrastructure.Common.Config
             }
         }
 
-        /// <summary>
-        /// 解析节点到实体
-        /// </summary>
-        /// <param name="node">待解析的xml配置节点</param>
-        /// <returns>解析后的实体</returns>
-        public virtual void Parse(IConfigurationSection node)
-        {
-            foreach (IConfigurationSection childNode in node.GetChildren())
-            {
-                if (string.IsNullOrEmpty(childNode.Key))
-                {
-                    continue;
-                } 
 
-                switch (childNode.Key)
-                {
-                    case "Name":
-                        Name = childNode.Value;
-                        break;
-                    case "EnableCryptography":
-                        {
-                            bool enable;
-                            if (bool.TryParse(childNode.Value, out enable))
-                            {
-                                EnableCryptography = enable;
-                            }
-                        }
-                        break;
-                    case "Default":
-                        {
-                            bool enable;
-                            if (bool.TryParse(childNode.Value, out enable))
-                            {
-                               Default  = enable;
-                            }
-                        }
-                        break;
-                    default:
-                        SetProperty(childNode);
-                        break;
-                }
-            }
-
-            if (EnableCryptography)
-            {
-                Decrypt();
-            }
-        }
         /// <summary>
         /// 对关键数据进行加密进，重载此方法进行解密
         /// </summary>
         /// <param name="entity">待解密对象</param>
         /// <returns>返回解密后对象</returns>
-        protected virtual void Decrypt()
+        internal protected virtual void Decrypt()
         {
         }
 
-        /// <summary>
-        /// 设置属性值
-        /// </summary>
-        /// <param name="node">结点</param>
-        protected virtual void SetProperty(IConfigurationSection node) { }
         private static readonly string[] KeyInfo = new[]
                 {
                     "System.Security.Cryptography.AesCryptoServiceProvider, System.Core,Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
@@ -134,7 +79,7 @@ namespace Zhoubin.Infrastructure.Common.Config
             }
             else
             {
-                var filePath = string.Format("{0}{1}{2}", AppContext.BaseDirectory.TrimEnd(Path.PathSeparator),Path.PathSeparator, "keyfile.txt");
+                var filePath = string.Format("{0}{1}{2}", AppContext.BaseDirectory.TrimEnd(Path.PathSeparator), Path.PathSeparator, "keyfile.txt");
 
                 var isFind = false;
                 try
@@ -164,13 +109,19 @@ namespace Zhoubin.Infrastructure.Common.Config
                 {
                     keyInfo = GenKeyContent();
                     var str = Encryption.Encrypt(keyInfo.SerializeObject(), EncryptionConfigEntity.CreateEncryptionConfigEntity(KeyInfo[0], true, new Dictionary<string, string> { { "Key", KeyInfo[2] }, { "IV", KeyInfo[1] } }));
-                    File.WriteAllText(filePath,str,Encoding.UTF8);
+                    File.WriteAllText(filePath, str, Encoding.UTF8);
                 }
             }
 
             return EncryptionConfigEntity.CreateEncryptionConfigEntity(keyInfo[0], true, new Dictionary<string, string> { { "Key", keyInfo[2] }, { "IV", keyInfo[1] } });
         }
 
+
+        internal static bool EnableAutoGenKey
+        {
+            get; set;
+        }
+        #endregion
 
         /// <summary>
         /// 配置构造函数
@@ -188,23 +139,58 @@ namespace Zhoubin.Infrastructure.Common.Config
         {
             return Decryption.Decrypt(data, DefaultEncryptionConfigEntity);
         }
+        private string _name;
+        private Dictionary<string, dynamic> dic = new Dictionary<string, dynamic>();
+
+        protected dynamic GetValue<T>(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException("key");
+            }
+            if (dic.ContainsKey(key))
+            {
+                return dic[key];
+            }
+            return default(T);
+        }
+        protected void SetValue(string key, dynamic value)
+        {
+            if (_lock)
+            {
+                throw new InfrastructureException("配置对象运行时，不能修改。");
+            }
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException("key");
+            }
+            if (dic.ContainsKey(key))
+            {
+                dic[key] = value;
+            }
+            else
+            {
+                dic.Add(key, value);
+            }
+        }
+        private bool _lock;
+        internal void LockDataSet()
+        {
+            _lock = true;
+        }
         /// <summary>
         /// 配置名称
         /// </summary>
-        public string Name { get; internal set; }
+        public string Name { get { return GetValue<string>("Name"); } set { SetValue("Name", value); } }
 
         /// <summary>
         /// 启用数据加密
         /// </summary>
-        public bool EnableCryptography { get; internal set; }
+        public bool EnableCryptography { get { return GetValue<bool>("EnableCryptography"); } set { SetValue("EnableCryptography", value); } }
 
         /// <summary>
         /// 默认配置
         /// </summary>
-        public bool Default { get; internal set; }
-
-        internal static bool EnableAutoGenKey {
-            get;set;
-        }
+        public bool Default { get { return GetValue<bool>("Default"); } set { SetValue("Default", value); } }
     }
 }

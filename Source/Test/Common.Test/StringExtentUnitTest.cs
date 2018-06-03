@@ -426,5 +426,17 @@ namespace Zhoubin.Infrastructure.Common.Test
             Assert.AreEqual(17, dt.Columns.Count);
             Assert.AreEqual(21, dt.Rows.Count);
         }
+        [TestMethod]
+        public void TestCreateInstance()
+        {
+            string typeStr = "Zhoubin.Infrastructure.Common.Test.CreateInstanceTest,Common.Test";
+            var instance = typeStr.CreateInstance();
+            Assert.IsNotNull(instance);
+            Assert.IsTrue(instance is CreateInstanceTest);
+        }
+    }
+    public class CreateInstanceTest
+    {
+
     }
 }
