@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Zhoubin.Infrastructure.Common.Config;
 
@@ -31,6 +32,18 @@ namespace Zhoubin.Infrastructure.Common.Test.Config
             var helper = new ConfigHelper<Entity>("Entities");
             Assert.IsNotNull(helper.DefaultConfig);
             Assert.AreEqual("Name2", helper.DefaultConfig.Name);
+
+        }
+        [TestMethod]
+        public void TestReadConfigDefault_1()
+        {
+            var helper = new ConfigHelper<Entity>("Entities");
+            var item = helper["Name1"];
+            Assert.IsNotNull(item);
+            Assert.AreEqual("Name1", item.Name);
+            Assert.AreEqual(1, item.ExtentProperty.Count);
+            Assert.AreEqual("key-1", item.ExtentProperty.Keys.First());
+            Assert.AreEqual("Value-1", item.ExtentProperty.Values.First());
 
         }
     }

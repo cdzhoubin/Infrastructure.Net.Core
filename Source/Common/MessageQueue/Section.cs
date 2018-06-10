@@ -156,22 +156,6 @@ namespace Zhoubin.Infrastructure.Common.MessageQueue
             }
         }
 
-
-        /// <summary>
-        /// 扩展属性
-        /// </summary>
-        public Dictionary<string, string> ExtentProperty
-        {
-            get
-            {
-                return GetValue<Dictionary<string, string>>("ExtentProperty");
-            }
-            set
-            {
-                SetValue("ExtentProperty", value);
-            }
-        }
-
         /// <summary>
         /// 事务类型
         /// </summary>

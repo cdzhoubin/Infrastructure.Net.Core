@@ -13,7 +13,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         public CacheConfig()
         {
             KeySuffix = string.Empty;
-            DefaultExpireTime = 2000;
+            DefaultExpireTime = 2;
         }
 
         #endregion
@@ -66,7 +66,15 @@ namespace Zhoubin.Infrastructure.Common.Cache
 
         public CacheProvider ProviderInstance
         {
-            get { return (CacheProvider)Provider.CreateInstance(); }
+            get {
+                if (!IsLock)
+                {
+                    return null;
+                }
+                var result = (CacheProvider)Provider.CreateInstance();
+                result.Initialize(this);
+                return result;
+            }
         }
 
         static string GetConfigValue(string configValue, string defaultValue)

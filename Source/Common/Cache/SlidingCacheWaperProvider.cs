@@ -14,7 +14,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         protected SlidingCacheWaperProvider(string cacheCatName) : base(cacheCatName)
         {
             KeySuffix = string.Empty;
-            DefaultExpireTime = 2000;
+            DefaultExpireTime = 2;
         }
         /// <summary>
         /// 创建存储包装类

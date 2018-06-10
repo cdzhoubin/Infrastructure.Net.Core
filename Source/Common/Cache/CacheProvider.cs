@@ -20,7 +20,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         {
             ProviderName = providerName;
             KeySuffix = string.Empty;
-            DefaultExpireTime = 2000;
+            DefaultExpireTime = 2;
         }
 
         #endregion
@@ -28,7 +28,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         public string ProviderName { get; private set; }
         /// <summary>
         /// 默认过期时间
-        /// 单位毫秒
+        /// 单位秒
         /// </summary>
         public ulong DefaultExpireTime { get; set; }
 
@@ -41,7 +41,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
         {
             return (string.IsNullOrEmpty(configValue) ? defaultValue : configValue);
         }
-
+        public abstract void Initialize(CacheConfig config);
         /// <summary>
         /// 新增缓存对象
         /// </summary>

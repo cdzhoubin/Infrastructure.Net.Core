@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>Infrastructure.Common.MessageQueue.Kafka</AssemblyName>
+    <RootNamespace>Zhoubin.Infrastructure.Common.MessageQueue.Kafka</RootNamespace>
+  </PropertyGroup>
+
+</Project>

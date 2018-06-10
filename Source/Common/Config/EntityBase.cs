@@ -128,7 +128,9 @@ namespace Zhoubin.Infrastructure.Common.Config
         /// </summary>
         public ConfigEntityBase()
         {
+            Default = false;
             EnableCryptography = false;
+            ExtentProperty = new Dictionary<string, string>();
         }
         /// <summary>
         /// 解密数据
@@ -139,7 +141,6 @@ namespace Zhoubin.Infrastructure.Common.Config
         {
             return Decryption.Decrypt(data, DefaultEncryptionConfigEntity);
         }
-        private string _name;
         private Dictionary<string, dynamic> dic = new Dictionary<string, dynamic>();
 
         protected dynamic GetValue<T>(string key)
@@ -155,6 +156,16 @@ namespace Zhoubin.Infrastructure.Common.Config
             return default(T);
         }
         protected void SetValue(string key, dynamic value)
+        {
+            if (KeyWords.Contains(key))
+            {
+                throw new InfrastructureException("配置关键字：" + key + ",是保留，不允许使用。");
+            }
+            SetValuePrivate(key, value);
+        }
+
+        private static List<string> KeyWords = new List<string> { "Name", "EnableCryptography", "Default", "ExtentProperty" };
+        private void SetValuePrivate(string key, dynamic value)
         {
             if (_lock)
             {
@@ -174,6 +185,10 @@ namespace Zhoubin.Infrastructure.Common.Config
             }
         }
         private bool _lock;
+        protected bool IsLock
+        {
+            get { return _lock; }
+        }
         internal void LockDataSet()
         {
             _lock = true;
@@ -181,16 +196,35 @@ namespace Zhoubin.Infrastructure.Common.Config
         /// <summary>
         /// 配置名称
         /// </summary>
-        public string Name { get { return GetValue<string>("Name"); } set { SetValue("Name", value); } }
+        public string Name
+        {
+            get { return GetValue<string>("Name"); }
+            set
+            {
+                SetValuePrivate("Name", value);
+            }
+        }
 
         /// <summary>
         /// 启用数据加密
         /// </summary>
-        public bool EnableCryptography { get { return GetValue<bool>("EnableCryptography"); } set { SetValue("EnableCryptography", value); } }
+        public bool EnableCryptography { get { return GetValue<bool>("EnableCryptography"); } set { SetValuePrivate("EnableCryptography", value); } }
 
         /// <summary>
         /// 默认配置
         /// </summary>
-        public bool Default { get { return GetValue<bool>("Default"); } set { SetValue("Default", value); } }
+        public bool Default { get { return GetValue<bool>("Default"); } set { SetValuePrivate("Default", value); } }
+
+        /// <summary>
+        /// 扩展属性
+        /// </summary>
+        public Dictionary<string, string> ExtentProperty
+        {
+            get { return GetValue<Dictionary<string, string>>("ExtentProperty"); }
+            set
+            {
+                SetValuePrivate("ExtentProperty", value);
+            }
+        }
     }
 }

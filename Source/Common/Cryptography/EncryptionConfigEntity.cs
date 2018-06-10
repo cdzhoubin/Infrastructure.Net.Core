@@ -31,24 +31,12 @@ namespace Zhoubin.Infrastructure.Common.Cryptography
         /// </summary>
         public EncryptionConfigEntity()
         {
-            ExtentProperty = new Dictionary<string, string>();
         }
         /// <summary>
         /// 日志处理器
         /// </summary>
         public string AlgorithmProvider { get { return GetValue<string>("AlgorithmProvider"); } set { SetValue("AlgorithmProvider", value); } }
 
-
-        /// <summary>
-        /// 扩展属性
-        /// </summary>
-        public Dictionary<string, string> ExtentProperty
-        {
-            get { return GetValue<Dictionary<string, string>>("ExtentProperty"); }
-            set {
-                SetValue("ExtentProperty", value);
-            }
-        }
 
         /// <summary>
         /// 同步算法
