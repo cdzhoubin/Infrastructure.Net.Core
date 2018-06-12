@@ -13,8 +13,6 @@ namespace Zhoubin.Infrastructure.Common.Cache
         /// <param name="cacheCatName">缓存分类分类名</param>
         protected SlidingCacheWaperProvider(string cacheCatName) : base(cacheCatName)
         {
-            KeySuffix = string.Empty;
-            DefaultExpireTime = 2;
         }
         /// <summary>
         /// 创建存储包装类

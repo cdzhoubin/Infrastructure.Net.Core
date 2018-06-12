@@ -86,37 +86,7 @@ namespace Zhoubin.Infrastructure.Common.Cache
             }
         }
 
-        /// <summary>
-        /// 默认过期时间
-        /// </summary>
-        public static ulong DefaultExpireTime
-        {
-            get
-            {
-                return _objProvider.DefaultExpireTime;
-            }
-
-            set
-            {
-                _objProvider.DefaultExpireTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Key前缘
-        /// </summary>
-        public static string KeySuffix
-        {
-            get
-            {
-                return _objProvider.KeySuffix;
-            }
-
-            set
-            {
-                _objProvider.KeySuffix = value;
-            }
-        }
+        
 
         /// <summary>
         /// 新增

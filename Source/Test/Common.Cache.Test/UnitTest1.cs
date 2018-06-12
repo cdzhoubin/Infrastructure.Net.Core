@@ -54,7 +54,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.Test
     [TestClass]
     public class UnitTestDistProviderName
     {
-        private const string ProviderName = "HttpCacheProvider";
+        private const string ProviderName = "MemcachedCacheSlidingProvider";
 
         [TestInitialize]
         public void Init()

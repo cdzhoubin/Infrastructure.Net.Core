@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Couchbase;
+using Couchbase.Core;
 using Zhoubin.Infrastructure.Common.Extent;
 
 namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
@@ -22,18 +23,26 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         {
 
         }
-
-
-
         #region ProviderBase Methods
-        private CacheConfig _config;
+
+        protected T Excute<T>(Func<IBucket, T> func)
+        {
+            return MemcachedCacheProviderHelper.Excute<T>(func, BucketName);
+        }
+        protected void Excute(Action<IBucket> action)
+        {
+            MemcachedCacheProviderHelper.Excute(action, BucketName);
+        }
+
+        protected string BucketName { get; private set; }
+
         /// 初始化
         /// </summary>
         /// <param name="config">配置数据</param>
         /// <exception cref="ArgumentNullException">当参数config为null时抛出此异常</exception>
-        public override void Initialize(CacheConfig config)
-        {
-            _config = config;
+        protected override void Init(CacheConfig config)
+        { 
+            BucketName = config.ExtentProperty["BucketName"] ?? "default";
             var types = config.ExtentProperty["SerializeTypes"];
             if (types != null)
             {
@@ -59,20 +68,15 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         /// <returns>成功返回true,其它返回false</returns>
         public override bool Add(string strKey, object objValue)
         {
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
-
-                return bucket.Replace(KeySuffix + strKey, CreateValueWraper(objValue).SerializeObject(_serializeTypes)).Success;
+            return Excute(bucket => bucket.Insert(KeySuffix + strKey, CreateValueWraper(objValue).SerializeObject(_serializeTypes)).Success);
         }
 
         /// <inheritdoc />
         public override bool Add(string strKey, object objValue, TimeSpan timeSpan)
         {
 
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
-                return bucket.Replace(KeySuffix + strKey,
-                                 CreateValueWraper(objValue).SerializeObject(_serializeTypes), timeSpan).Success;
+            return Excute(bucket => bucket.Insert(KeySuffix + strKey,
+                                 CreateValueWraper(objValue).SerializeObject(_serializeTypes), timeSpan).Success); ;
         }
 
         /// <summary>
@@ -84,10 +88,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         /// <returns></returns>
         private T GetValue<T>(SlidingCacheWraper result, string strKey)
         {
-
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
-                return GetValue<T>(result, strKey, (p, v, t) => bucket.Replace(p, v.SerializeObject(_serializeTypes), t));
+            return Excute(bucket => GetValue<T>(result, strKey, (p, v, t) => bucket.Replace(p, v.SerializeObject(_serializeTypes), t)));
         }
 
         /// <summary>
@@ -98,8 +99,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         public override object Get(string strKey)
         {
 
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            return Excute(bucket =>
             {
                 var value = bucket.Get<string>(KeySuffix + strKey);
                 if (!value.Success)
@@ -107,7 +107,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
                     return null;
                 }
                 return GetValue<object>(value.Value.DeserializeObject<SlidingCacheWraper>(_serializeTypes), KeySuffix + strKey);
-            }
+            });
         }
 
 
@@ -115,8 +115,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         public override IDictionary<string, object> Get(params string[] keys)
         {
             IList<string> keysList = keys.Select(str => KeySuffix + str).ToList();
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            return Excute(bucket =>
             {
                 IDictionary<string, object> retVal = new Dictionary<string, object>();
                 foreach (var key in keysList)
@@ -129,7 +128,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
                 }
 
                 return retVal;
-            }
+            });
         }
 
         /// <summary>
@@ -138,30 +137,25 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         public override void RemoveAll()
         {
 
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            Excute(bucket =>
             {
-                var user = _config.ExtentProperty["User"];
-                var manager = string.IsNullOrEmpty(user) ? bucket.CreateManager() : bucket.CreateManager(user, _config.ExtentProperty["Password"]);
+                var user = CacheConfig.ExtentProperty["User"];
+                var manager = string.IsNullOrEmpty(user) ? bucket.CreateManager() : bucket.CreateManager(user, CacheConfig.ExtentProperty["Password"]);
                 var result = manager.Flush();
-            }
+            });
         }
 
         /// <inheritdoc />
         public override bool Remove(string strKey)
         {
-
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
-                return bucket.Remove(KeySuffix + strKey).Success;
+            return Excute(bucket => bucket.Remove(KeySuffix + strKey).Success);
         }
 
 
         /// <inheritdoc />
         public override T Get<T>(string strKey)
         {
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            return Excute(bucket =>
             {
                 var value = bucket.Get<string>(KeySuffix + strKey);
                 if (!value.Success)
@@ -169,15 +163,14 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
                     return default(T);
                 }
                 return GetValue<T>(value.Value.DeserializeObject<SlidingCacheWraper>(_serializeTypes), KeySuffix + strKey);
-            }
+            });
         }
 
 
         /// <inheritdoc />
         public override ulong Increment(string key, ulong amount)
         {
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            return Excute(bucket =>
             {
                 var result = bucket.Increment(KeySuffix + key, DefaultExpireTime, amount);
                 if (result.Success)
@@ -185,16 +178,15 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
                     return result.Value;
                 }
 
-                return 0;
-            }
+                return default(ulong);
+            });
         }
 
 
         /// <inheritdoc />
         public override ulong Decrement(string key, ulong amount)
         {
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
+            return Excute(bucket =>
             {
                 var result = bucket.Decrement(KeySuffix + key, DefaultExpireTime, amount);
                 if (result.Success)
@@ -202,8 +194,8 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
                     return result.Value;
                 }
 
-                return 0;
-            }
+                return default(ulong);
+            });
         }
 
         #endregion
@@ -218,10 +210,18 @@ namespace Zhoubin.Infrastructure.Common.Cache.MemcachedCache
         /// <inheritdoc />
         public override bool AddForSliding(string strKey, object objValue, TimeSpan timeSpan)
         {
-            using (Cluster _cluster = new Cluster())
-            using (var bucket = _cluster.OpenBucket())
-                return bucket.Replace(KeySuffix + strKey,
-                                 CreateValueWraper(objValue, timeSpan).SerializeObject(_serializeTypes), timeSpan).Success;
+            return Excute(bucket =>
+            {
+                if (bucket.Exists(KeySuffix + strKey))
+                {
+                    return bucket.Replace(KeySuffix + strKey,
+            CreateValueWraper(objValue, timeSpan).SerializeObject(_serializeTypes), timeSpan).Success;
+                }
+
+                return bucket.Insert(KeySuffix + strKey,
+              CreateValueWraper(objValue, timeSpan).SerializeObject(_serializeTypes), timeSpan).Success;
+
+            });
         }
 
         private Type[] _serializeTypes;

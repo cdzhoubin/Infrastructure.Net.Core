@@ -21,10 +21,10 @@ namespace Zhoubin.Infrastructure.Common.Cache.Test
         }
 
         [TestMethod]
-        public void TestMethodMax20M()
+        public void TestMethodMax12M()
         {
-            byte[] buffer = new byte[1024 * 1024 * 20];
-            var result = ObjProvider.Add("key20M", buffer);
+            byte[] buffer = new byte[1024 * 1024 * 14];
+            var result = ObjProvider.Add("key12M", buffer);
             Assert.AreEqual(true, result);
         }
 
@@ -58,7 +58,7 @@ namespace Zhoubin.Infrastructure.Common.Cache.Test
         [TestMethod]
         public void TestMethodMax20M()
         {
-            byte[] buffer = new byte[1000 * 1000 * 10];
+            byte[] buffer = new byte[1024 * 1024 * 14];
             var result = ObjProvider.Add("key20M", buffer);
             Assert.AreEqual(true, result);
         }

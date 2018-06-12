@@ -30,18 +30,27 @@ namespace Zhoubin.Infrastructure.Common.Cache
         /// 默认过期时间
         /// 单位秒
         /// </summary>
-        public ulong DefaultExpireTime { get; set; }
+        public ulong DefaultExpireTime { get; private set; }
 
         /// <summary>
         /// Key前缀
         /// </summary>
-        public string KeySuffix { get; set; }
+        public string KeySuffix { get; private set; }
 
         static string GetConfigValue(string configValue, string defaultValue)
         {
             return (string.IsNullOrEmpty(configValue) ? defaultValue : configValue);
         }
-        public abstract void Initialize(CacheConfig config);
+        protected  CacheConfig CacheConfig { get; private set; }
+        public void Initialize(CacheConfig config)
+        {
+            CacheConfig = config;
+            KeySuffix = config.KeySuffix;
+            DefaultExpireTime = config.DefaultExpireTime;
+            Init(config);
+        }
+
+        protected abstract void Init(CacheConfig config);
         /// <summary>
         /// 新增缓存对象
         /// </summary>

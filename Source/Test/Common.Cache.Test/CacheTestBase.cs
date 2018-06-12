@@ -151,9 +151,9 @@ namespace Zhoubin.Infrastructure.Common.Cache.Test
         [TestMethod]
         public void TestMethodValid()
         {
-            int second = 1;
+            int second = 2;
             ObjProvider.Add("key2_Valid", "testServer_Valid", DateTime.Now.AddSeconds(second));
-            var result = ObjProvider.Get<string>("key2_Valid");
+            var result = ObjProvider.Get("key2_Valid");
             Assert.AreEqual("testServer_Valid", result);
 
             Thread.Sleep(second * 1000 *2);

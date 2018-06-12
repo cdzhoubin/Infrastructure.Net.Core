@@ -169,10 +169,26 @@ namespace Zhoubin.Infrastructure.Common.Cache.Redis
         {
             return _client.Set(KeySuffix + strKey, CreateValueWraper(objValue), time);
         }
-
-        public override void Initialize(CacheConfig config)
+        static List<Type> TypeList = new List<Type>();
+        protected override void Init(CacheConfig config)
         {
             _client = new RedisClient(config.ExtentProperty["Servers"]);
+            var str = config.ExtentProperty["SerializeTypes"];
+            if (!string.IsNullOrEmpty(str))
+            {
+                foreach (string item in str.Split(';'))
+                {
+                    if (string.IsNullOrEmpty(item.Trim()))
+                    {
+                        continue;
+                    }
+                    TypeList.Add(Type.GetType(item));
+                }
+            }
+            if (TypeList.Count > 0)
+            {
+                JsConfig.AllowRuntimeType = type => TypeList.Contains(type);
+            }
         }
     }
 
