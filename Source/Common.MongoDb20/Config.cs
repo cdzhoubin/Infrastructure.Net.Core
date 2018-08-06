@@ -28,20 +28,33 @@ namespace Zhoubin.Infrastructure.Common.MongoDb
     /// </summary>
     public class ConnectionEntity : ConfigEntityBase
     {
+
         /// <summary>
         /// 连接字符串
         /// </summary>
-        public string ConnectionString { get; private set; }
+        public string ConnectionString
+        {
+            get { return GetValue<string>("ConnectionString"); }
+            set { SetValue("ConnectionString", value); }
+        }
         /// <summary>
         /// 类型：Provider类型名称
         /// </summary>
-        public string Type { get; private set; }
+        public string Type
+        {
+            get { return GetValue<string>("Type"); }
+            set { SetValue("Type", value); }
+        }
         /// <summary>
         /// 数据库名称
         /// </summary>
-        public string DataBase { get; private set; }
+        public string DataBase
+        {
+            get { return GetValue<string>("DataBase"); }
+            set { SetValue("DataBase", value); }
+        }
 
-        
+
 
         /// <summary>
         /// 对关键数据进行加密进，重载此方法进行解密
