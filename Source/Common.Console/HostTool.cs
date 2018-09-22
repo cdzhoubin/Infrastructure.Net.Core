@@ -14,32 +14,55 @@ namespace Zhoubin.Infrastructure.Common.Console
     /// </summary>
     public static class HostTool
     {
-        public static async Task CreateHostBuilder(string[] args)
+        /// <summary>
+        /// 使用方法
+        ///public static async Task Main(string[] args)
+        ///{
+        ///    await HostTool.CreateHostBuilder<T>(args);
+        ///}
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static async Task CreateHostBuilder<T>(string[] args) where T : class, IHostedService
         {
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", optional: true);
                     config.AddEnvironmentVariables();
 
                     if (args != null)
                     {
                         config.AddCommandLine(args);
                     }
+
+                    var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                    var configFile = "appsettings.json";
+                    if (string.IsNullOrEmpty(environmentName))
+                    {
+                        configFile = string.Format("appsettings.{0}.json", environmentName);
+                    }
+                    config.AddJsonFile(configFile, optional: true);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddOptions();
                     //services.Configure<AppConfig>(hostContext.Configuration.GetSection("AppConfig"));
 
-                   // services.AddSingleton<IHostedService, PrintTextToConsoleService>();
+                    services.AddSingleton<IHostedService, T>();
                 })
-                .ConfigureLogging((hostingContext, logging) => {
+                .ConfigureLogging((hostingContext, logging) =>
+                {
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
                 });
 
             await builder.RunConsoleAsync();
         }
+    }
+
+    public interface IHostedService<TSetting>: IHostedService,IDisposable
+    {
+
     }
 }
